@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
@@ -16,9 +17,12 @@ fn part_1(input: &[i32]) -> usize {
 }
 
 fn part_2(input: &[i32]) -> usize {
-    let window_sums: Vec<i32> = input.windows(3).map(|wnd| wnd.iter().sum()).collect();
-
-    window_sums.windows(2).filter(|wnd| wnd[1] > wnd[0]).count()
+    input
+        .windows(3)
+        .map(|wnd| wnd.iter().sum())
+        .tuple_windows::<(i32, i32)>()
+        .filter(|&(lhs, rhs)| rhs > lhs)
+        .count()
 }
 
 #[cfg(test)]
