@@ -8,18 +8,21 @@ fn main() {
         .map(|l| l.unwrap().parse().unwrap())
         .collect();
 
-    println!("part 1: {}", part_1(&input));
-    println!("part 2: {}", part_2(&input));
+    println!("part 1: {}", part_1(input.iter()));
+    println!("part 2: {}", part_2(input.iter()));
 }
 
-fn part_1(input: &[i32]) -> usize {
-    input.windows(2).filter(|wnd| wnd[1] > wnd[0]).count()
-}
-
-fn part_2(input: &[i32]) -> usize {
+fn part_1<'a>(input: impl Iterator<Item = &'a i32>) -> usize {
     input
-        .windows(3)
-        .map(|wnd| wnd.iter().sum())
+        .tuple_windows::<(&i32, &i32)>()
+        .filter(|&(lhs, rhs)| rhs > lhs)
+        .count()
+}
+
+fn part_2<'a>(input: impl Iterator<Item = &'a i32>) -> usize {
+    input
+        .tuple_windows::<(&i32, &i32, &i32)>()
+        .map(|(i1, i2, i3)| i1 + i2 + i3)
         .tuple_windows::<(i32, i32)>()
         .filter(|&(lhs, rhs)| rhs > lhs)
         .count()
@@ -33,11 +36,11 @@ mod tests {
 
     #[test]
     fn part_1_works() {
-        assert_eq!(part_1(TEST_DATA), 7);
+        assert_eq!(part_1(TEST_DATA.iter()), 7);
     }
 
     #[test]
     fn part_2_works() {
-        assert_eq!(part_2(TEST_DATA), 5);
+        assert_eq!(part_2(TEST_DATA.iter()), 5);
     }
 }
