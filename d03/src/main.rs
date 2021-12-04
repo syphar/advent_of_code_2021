@@ -53,12 +53,64 @@ where
     gamma * epsilon
 }
 
+fn count_bits<T, I>(input: I, position: usize) -> (usize, usize)
+where
+    T: AsRef<BitSlice<Msb0>>,
+    I: Iterator<Item = T>,
+{
+    let mut count_1: usize = 0;
+    let mut count_0: usize = 0;
+
+    for bs in input {
+        if bs.as_ref()[position] {
+            count_1 += 1;
+        } else {
+            count_0 += 1;
+        }
+    }
+
+    (count_1, count_0)
+}
+
 fn part_2<T, I, const N: usize>(input: I) -> usize
 where
     T: AsRef<BitSlice<Msb0>>,
     I: Iterator<Item = T>,
 {
-    todo!();
+    let numbers: Vec<BitVec<Msb0>> = input.map(|bs| bs.as_ref().to_bitvec()).collect();
+    part_2_inner::<_, _, N>(numbers.iter(), true) * part_2_inner::<_, _, N>(numbers.iter(), false)
+}
+
+fn part_2_inner<T, I, const N: usize>(input: I, reverse: bool) -> usize
+where
+    T: AsRef<BitSlice<Msb0>>,
+    I: Iterator<Item = T>,
+{
+    let mut numbers: Vec<BitVec<Msb0>> = input.map(|bs| bs.as_ref().to_bitvec()).collect();
+
+    for bit in 0..N {
+        let (ones, zeroes) = count_bits(numbers.iter(), bit);
+        let wanted: bool = if reverse {
+            ones < zeroes
+        } else {
+            ones >= zeroes
+        };
+
+        numbers = numbers
+            .iter()
+            .filter(|bv| bv[bit] == wanted)
+            .cloned()
+            .collect();
+
+        if numbers.is_empty() {
+            panic!("removed all numbers!")
+        } else if numbers.len() == 1 {
+            let bf = &mut numbers[0];
+            bf.resize(N, false);
+            return bf.load::<usize>();
+        }
+    }
+    unreachable!();
 }
 
 #[cfg(test)]
