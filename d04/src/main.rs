@@ -1,5 +1,5 @@
 use std::fs::File;
-use std::io::{BufRead, BufReader, Read};
+use std::io::Read;
 use std::str::FromStr;
 use thiserror::Error;
 
@@ -9,10 +9,12 @@ pub enum SomeError {
     ParseError,
 }
 
+#[derive(Clone)]
 struct Board {
     numbers: [u8; 25],
     found: [bool; 25],
     last_called: Option<u8>,
+    won: bool,
 }
 
 impl Board {
@@ -21,6 +23,9 @@ impl Board {
     }
 
     fn set(&mut self, number: u8) {
+        if self.won {
+            panic!("has already won!")
+        }
         for i in 0..25 {
             if self.numbers[i] == number {
                 self.found[i] = true;
@@ -29,14 +34,16 @@ impl Board {
         self.last_called = Some(number);
     }
 
-    fn has_won(&self) -> bool {
+    fn has_won(&mut self) -> bool {
         for x in 0..5 {
             if (0..5).all(|y| self.found[Self::coord(x, y)]) {
+                self.won = true;
                 return true;
             }
         }
         for y in 0..5 {
             if (0..5).all(|x| self.found[Self::coord(x, y)]) {
+                self.won = true;
                 return true;
             }
         }
@@ -63,6 +70,7 @@ impl FromStr for Board {
             numbers: [0; 25],
             found: [false; 25],
             last_called: None,
+            won: false,
         };
         for (l, line) in s.trim().lines().enumerate() {
             for (i, num) in line.trim().split(' ').filter(|s| !s.is_empty()).enumerate() {
@@ -110,25 +118,50 @@ fn main() {
         .map(|s| s.parse().unwrap())
         .collect();
 
-    let mut boards: Vec<Board> = content
+    let boards: Vec<Board> = content
         .split("\n\n")
         .skip(2)
         .map(|s| Board::from_str(s).unwrap())
         .collect();
 
-    println!("result part 1: {}", part_1(numbers, &mut boards))
+    println!(
+        "result part 1: {}",
+        part_1(numbers.iter(), &mut boards.clone())
+    );
+    println!(
+        "result part 2: {}",
+        part_2(numbers.iter(), &mut boards.clone())
+    );
 }
 
-fn part_1(numbers: impl IntoIterator<Item = u8>, boards: &mut Vec<Board>) -> u16 {
+fn part_1<'a>(numbers: impl Iterator<Item = &'a u8>, boards: &mut Vec<Board>) -> u16 {
     for n in numbers {
         for b in boards.iter_mut() {
-            b.set(n);
+            b.set(*n);
             if b.has_won() {
                 return b.score();
             }
         }
     }
     panic!("no board has won!");
+}
+
+fn part_2<'a>(numbers: impl Iterator<Item = &'a u8>, boards: &mut Vec<Board>) -> u16 {
+    let mut last_winner: Option<Board> = None;
+
+    for n in numbers {
+        for b in boards.iter_mut() {
+            if b.won {
+                continue;
+            }
+            b.set(*n);
+            if b.has_won() {
+                last_winner = Some(b.clone());
+            }
+        }
+    }
+
+    last_winner.unwrap().score()
 }
 
 #[cfg(test)]
@@ -167,6 +200,16 @@ mod tests {
             .map(|s| Board::from_str(s).unwrap())
             .collect();
 
-        assert_eq!(part_1(NUMBERS, &mut boards), 4512);
+        assert_eq!(part_1(NUMBERS.iter(), &mut boards), 4512);
+    }
+
+    #[test]
+    fn test_part_2() {
+        let mut boards: Vec<Board> = BOARDS
+            .split("\n\n")
+            .map(|s| Board::from_str(s).unwrap())
+            .collect();
+
+        assert_eq!(part_2(NUMBERS.iter(), &mut boards), 1924);
     }
 }
