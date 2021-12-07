@@ -7,10 +7,11 @@ fn main() {
         .map(|s| s.parse().unwrap())
         .collect();
 
-    println!("part 1: {}", part_1(&input, 80));
+    println!("part 1: {}", calc(&input, 80));
+    println!("part 2: {}", calc(&input, 256));
 }
 
-fn part_1(input: &[u16], days: u16) -> usize {
+fn calc(input: &[u16], days: u16) -> usize {
     let mut fish: Vec<u16> = input.to_vec();
     for _ in 1..=days {
         for i in 0..fish.len() {
@@ -34,6 +35,10 @@ mod tests {
 
     #[test]
     fn test_part_1() {
-        assert_eq!(part_1(&NUMBERS, 80), 5934);
+        assert_eq!(calc(&NUMBERS, 80), 5934);
+    }
+    #[test]
+    fn test_part_2() {
+        assert_eq!(calc(&NUMBERS, 256), 26984457539);
     }
 }
