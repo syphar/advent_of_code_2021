@@ -39,6 +39,6 @@ mod tests {
     }
     #[test]
     fn test_part_2() {
-        assert_eq!(calc(&NUMBERS, 256), 26984457539);
+        assert_eq!(calc(&NUMBERS, 256), 26_984_457_539);
     }
 }
