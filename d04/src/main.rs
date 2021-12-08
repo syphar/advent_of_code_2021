@@ -1,5 +1,4 @@
-use std::fs::File;
-use std::io::Read;
+use std::fs;
 use std::str::FromStr;
 use thiserror::Error;
 
@@ -104,11 +103,7 @@ impl std::fmt::Debug for Board {
 }
 
 fn main() {
-    let mut content = String::new();
-    File::open("input.txt")
-        .unwrap()
-        .read_to_string(&mut content)
-        .unwrap();
+    let content = fs::read_to_string("input.txt").unwrap();
 
     let numbers: Vec<u8> = content
         .lines()
